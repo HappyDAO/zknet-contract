@@ -2,11 +2,13 @@
 
 pragma solidity ^0.8.4;
 
-import {Storage} from "./Storage.sol";
+import "hardhat/console.sol";
+
+import {Base} from "./Base.sol";
 import {IVault} from "../interface/IVault.sol";
 
-contract Vault is IVault, Storage {
-    function mint(address token, int256 amount) public onlyOwner {
+contract Vault is IVault, Base {
+    function mint(address token, int256 amount) public onlyManager{
         _balance[msg.sender][token] += amount;
     }
 
@@ -14,11 +16,17 @@ contract Vault is IVault, Storage {
         return _balance[msg.sender][token];
     }
 
-    function bind(SignedAccount calldata l1Account) external override {}
+    function bind(SignedAccount calldata l1Account) external override {
+        
+    }
 
-    function deposit(address token, uint256 amount) external override {}
+    function deposit(address token, uint256 amount) external override {
+        
+    }
 
-    function withdraw(address token, uint256 amount) external override {}
+    function withdraw(address token, uint256 amount) external override {
+        
+    }
 
     function positionDeposit(
         uint256 positionId,
