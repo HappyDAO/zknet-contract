@@ -2,22 +2,14 @@
 
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+
 import {Storage} from "./Storage.sol";
+import {AccessControl} from "../lib/AccessControl.sol";
 
-contract Base is Storage {
-    modifier onlyOwner() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            "AccessControl: caller is not the owner"
-        );
-        _;
-    }
-
-    modifier onlyManager() {
-        require(
-            hasRole(MANAGER_ROLE, _msgSender()),
-            "AccessControl: caller is not the manager"
-        );
-        _;
+contract Base is Storage, AccessControl, ReentrancyGuard {
+    function _contractAddress() internal view returns (address) {
+        return address(this);
     }
 }

@@ -8,7 +8,9 @@ zknet contracts of l1 and l2
 
 ### Env
 - node 16.14.2
-- npm 8.5.0
+- yarn 1.22.18
+- docker 20.10.14
+- docker-compose 1.29.2
 
 
 ### Usage
@@ -19,17 +21,24 @@ git clone https://github.com/HappyDAO/zknet-contract.git
 
 # init
 cd zknet-contract
-npm install
+yarn
 ```
 
 #### Compile contract
 ```bash
-# The compiled contract is generated in ./artifacts/contracts.
-npm run compile
+# Docker must be started, the contract will be compiled in the zksolc image
+# The compiled contract is generated in ./artifacts-zk/contracts.
+yarn compile
+```
+
+#### Prepare zksync environment
+```bash
+# The local zksync environment is started through docker
+cd zksync-docker && ./rebuild.sh
 ```
 
 #### Test contract
 ```bash
 # Test cases are in ./test
-npm test
+yarn test
 ```

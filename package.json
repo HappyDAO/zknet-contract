@@ -4,8 +4,8 @@
   "description": "zknet contract",
   "main": "index.js",
   "scripts": {
-    "compile": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "compile": "yarn hardhat compile",
+    "test": "NODE_ENV=local yarn hardhat test"
   },
   "repository": {
     "type": "git",
@@ -18,12 +18,12 @@
   },
   "homepage": "https://github.com/HappyDAO/zknet-contract#readme",
   "devDependencies": {
+    "@matterlabs/hardhat-zksync-deploy": "^0.2",
+    "@matterlabs/hardhat-zksync-solc": "0.3",
     "@nomiclabs/hardhat-ethers": "^2.0.5",
     "@nomiclabs/hardhat-etherscan": "^3.0.3",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.6.0",
-    "@openzeppelin/contracts-upgradeable": "^4.6.0",
-    "@openzeppelin/hardhat-upgrades": "^1.17.0",
     "@typechain/ethers-v5": "^7.2.0",
     "@typechain/hardhat": "^2.3.1",
     "@types/chai": "^4.3.1",
@@ -41,7 +41,7 @@
     "eslint-plugin-prettier": "^3.4.1",
     "eslint-plugin-promise": "^5.2.0",
     "ethereum-waffle": "^3.4.4",
-    "ethers": "^5.6.5",
+    "ethers": "^5.5.4",
     "hardhat": "^2.9.3",
     "hardhat-gas-reporter": "^1.0.8",
     "prettier": "^2.6.2",
@@ -50,6 +50,7 @@
     "solidity-coverage": "^0.7.21",
     "ts-node": "^10.7.0",
     "typechain": "^5.2.0",
-    "typescript": "^4.6.4"
+    "typescript": "^4.6.4",
+    "zksync-web3": "^0.4.0"
   }
 }
