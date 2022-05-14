@@ -5,11 +5,18 @@ pragma solidity ^0.8.4;
 import {Types} from "../lib/Types.sol";
 
 contract Storage {
-    // key: trader, token address
-    mapping(address => mapping(address => int256)) internal _balance;
+    // token id => token address(erc20), reduce storage
+    mapping(uint32 => address) internal _token;
 
-    // key: l2 address -> l1 address
-    mapping(address => string) internal _bindingAccount;
+    // trader => asset id
+    mapping(address => mapping(uint32 => int256)) internal _balance;
 
-    
+    // l2 address => l1 address
+    mapping(address => address) internal _bindingAccount;
+
+    // position id => position
+    mapping(uint256 => Types.Position) internal _position;
+
+    // order id => order
+    mapping(uint256 => Types.Order) internal _order;
 }

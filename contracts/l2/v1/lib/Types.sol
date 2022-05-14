@@ -1,13 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pragma solidity ^0.8.4;
+pragma experimental ABIEncoderV2;
 
-contract Types {
+library Types {
     struct Position {
+        uint256 id;
         address owner;
-        bool marginIsPositive;
-        bool positionIsPositive;
-        uint256 margin;
-        uint256 position;
+        int256 marginAmount;
+        uint32 marginToken;
+        int256 positionAmount;
+        uint32 positionToken;
+    }
+
+    struct Order {
+        uint256 id;
+        address trader;
+        uint256 positionId;
+        uint32 positionToken;
+        int256 positionAmount;
+        int256 remainAmount;
+        uint256 fee;
+        uint32 timestamp;
+        bytes signature;
     }
 }

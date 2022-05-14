@@ -4,21 +4,19 @@ pragma solidity ^0.8.4;
 
 interface ITrade {
     struct Order {
-        address addr;
+        uint256 id;
+        address trader;
         uint256 positionId;
-        uint64 timestamp;
-        address tokenBuy;
-        address tokenSell;
-        uint256 amountBuy;
-        uint256 amountSell;
+        uint32 positionToken;
+        int256 positionAmount;
         uint256 fee;
-        string extend;
-        string signature;
+        uint32 timestamp;
+        bytes signature;
     }
 
     struct SettlementInfo {
-        uint256 partASold;
-        uint256 partBSold;
+        int256 partAActualAmount;
+        int256 partBActualAmount;
         uint256 partAFee;
         uint256 partBFee;
     }
@@ -31,19 +29,19 @@ interface ITrade {
     }
 
     struct OraclePrice {
-        address token;
+        uint32 token;
         uint256 price;
         SignedPrice[] signedPrices;
     }
 
     struct Indice {
-        address token;
+        uint32 token;
         uint256 proce;
     }
 
     struct DeleverageOrder {
         uint256 positionId;
-        address token;
+        uint32 token;
         uint256 sold;
         uint256 fee;
     }

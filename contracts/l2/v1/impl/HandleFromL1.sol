@@ -7,7 +7,7 @@ import {Storage} from "./Storage.sol";
 import {Vault} from "./Vault.sol";
 import {Configuration} from "./Configuration.sol";
 
-contract HandleFromL1 is IHandleFromL1, Storage, Vault, Configuration {
+contract HandleFromL1 is IHandleFromL1,  Vault, Configuration {
     
     
 }
