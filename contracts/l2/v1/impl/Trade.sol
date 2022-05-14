@@ -23,7 +23,7 @@ contract Trade is ITrade, Base {
                 "Trade: order position amount and actual amount not match"
             );
             require(
-                actualAmount > order.positionAmount,
+                actualAmount >= order.positionAmount,
                 "Trade: order position amount and actual amount not match"
             );
         } else {
@@ -32,7 +32,7 @@ contract Trade is ITrade, Base {
                 "Trade: order position amount and actual amount not match"
             );
             require(
-                actualAmount < order.positionAmount,
+                actualAmount <= order.positionAmount,
                 "Trade: order position amount and actual amount not match"
             );
         }
@@ -46,13 +46,13 @@ contract Trade is ITrade, Base {
         if (existedOrder.id != 0) {
             if (existedOrder.positionAmount < 0) {
                 require(
-                    actualAmount > existedOrder.remainAmount,
-                    "Trade: order position amount and actual amount not match"
+                    actualAmount >= existedOrder.remainAmount,
+                    "Trade: repeated settlement"
                 );
             } else {
                 require(
-                    actualAmount < existedOrder.remainAmount,
-                    "Trade: order position amount and actual amount not match"
+                    actualAmount <= existedOrder.remainAmount,
+                    "Trade: repeated settlement"
                 );
             }
         }
@@ -72,7 +72,7 @@ contract Trade is ITrade, Base {
         _checkRepeatSettlement(existedOrderB, settlementInfo.partBActualAmount);
         require(
             partA.positionToken == partB.positionToken,
-            "Trade: order token not match"
+            "Trade: orders token not match"
         );
         require(
             (partA.positionAmount > 0 && partB.positionAmount < 0) ||
@@ -86,10 +86,14 @@ contract Trade is ITrade, Base {
         Order calldata order,
         Types.Position memory position
     ) internal pure {
-        require(
-            order.positionToken == position.positionToken,
-            "Trade: order token not match"
-        );
+        if (position.positionToken == 0) {
+            position.positionToken = order.positionToken;
+        } else {
+            require(
+                order.positionToken == position.positionToken,
+                "Trade: order token position token not match"
+            );
+        }
         if (existedOrder.id != 0) {
             require(
                 keccak256(existedOrder.signature) == keccak256(order.signature),
@@ -151,7 +155,7 @@ contract Trade is ITrade, Base {
 
         Types.Position memory positionB = _getAndCheckPosition(
             partB.id,
-            partA.trader
+            partB.trader
         );
         _checkPositionMatch(existedOrderB, partB, positionB);
 

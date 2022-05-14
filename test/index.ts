@@ -154,6 +154,8 @@ describe("Perpetual", function () {
     log("deposit to position");
     const positionId1 = 1;
     const positionId2 = 2;
+    const orderId1 = 1;
+    const orderId2 = 2;
     await (
       await perpetual
         .connect(randWallet1)
@@ -167,12 +169,37 @@ describe("Perpetual", function () {
     expect(await perpetual.connect(randWallet1).balance(ERC20_ID)).to.equal(0);
     expect(await perpetual.connect(randWallet2).balance(ERC20_ID)).to.equal(0);
 
-    // log("settlement order");
-    // await (
-    //   await perpetual
-    //     .connect(randWallet1)
-    //     .settlement()
-    // ).wait();
+    log("settlement order");
+    await (
+      await perpetual.connect(deployWallet).settlement(
+        {
+          id: orderId1,
+          trader: randWallet1.address,
+          positionId: positionId1,
+          positionToken: ERC20_ID,
+          positionAmount: 100,
+          fee: 1,
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: [1, 2, 3],
+        },
+        {
+          id: orderId2,
+          trader: randWallet2.address,
+          positionId: positionId2,
+          positionToken: ERC20_ID,
+          positionAmount: -100,
+          fee: 1,
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: [1, 2, 3],
+        },
+        {
+          partAActualAmount: 100,
+          partBActualAmount: -100,
+          partAFee: 1,
+          partBFee: 1,
+        }
+      )
+    ).wait();
 
     log("withdraw position");
     await (
