@@ -8,3 +8,6 @@ cache
 artifacts
 .idea
 .openzeppelin
+volumes
+artifacts-zk
+cache-zk

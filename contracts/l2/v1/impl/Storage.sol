@@ -2,17 +2,21 @@
 
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-
 import {Types} from "../lib/Types.sol";
 
-contract Storage is AccessControlUpgradeable, ReentrancyGuardUpgradeable {
-    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER");
+contract Storage {
+    // token id => token address(erc20), reduce storage
+    mapping(uint32 => address) internal _token;
 
-    // key: trader, token address
-    mapping(address => mapping(address => int256)) internal _balance;
+    // trader => asset id
+    mapping(address => mapping(uint32 => int256)) internal _balance;
 
-    // key: l2 address -> l1 address
-    mapping(address => string) internal _bindingAccount;
+    // l2 address => l1 address
+    mapping(address => address) internal _bindingAccount;
+
+    // position id => position
+    mapping(uint256 => Types.Position) internal _position;
+
+    // order id => order
+    mapping(uint256 => Types.Order) internal _order;
 }
