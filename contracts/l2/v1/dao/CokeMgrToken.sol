@@ -6,9 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
-contract ZKNToken is ERC20, ERC20Permit, ERC20Votes {
+contract CokeMgrToken is ERC20, ERC20Permit, ERC20Votes {
 
-    constructor () ERC20("CokeMgrToken", "CMT") ERC20Permit("CokeMgrToken") {}
+    constructor (uint256 amount) ERC20("CokeMgrToken", "CMT") ERC20Permit("CokeMgrToken") {
+        _mint(msg.sender, amount);
+    }
 
     function _afterTokenTransfer(address from, address to, uint256 amount)
     internal

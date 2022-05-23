@@ -35,7 +35,6 @@ class ZKNet {
   adminWallet: zksync.Wallet;
   normalWallets: zksync.Wallet[];
   // 3. predefined contract
-  perpetual: zksync.Contract;
   erc20L1: ethers.Contract;
   erc20L2: zksync.Contract;
   ethL2: zksync.Contract;
@@ -74,36 +73,9 @@ class ZKNet {
       erc20ABI,
       this.zksyncProvider
     );
-
-    this.perpetual = new zksync.Contract(
-      ETH_ADDRESS,
-      erc20ABI,
-      this.zksyncProvider
-    );
   }
 
-  async init() {
-    // 2. init predefined contract
-    log.info("try to deploy perpetual contract");
-    this.perpetual = await this.deployPerpetual(this.adminWallet);
-    log.info("perpetual contract deployed, address: ", this.perpetual.address);
-
-    const registerETHTx = await this.perpetual.registerToken(
-      ETH_ADDRESS,
-      ETH_ID
-    );
-    registerETHTx.wait();
-
-    const registerERC20Tx = await this.perpetual.registerToken(
-      ERC20_ADDRESS,
-      ERC20_ID
-    );
-    registerERC20Tx.wait();
-  }
-
-  async deployPerpetual(wallet: zksync.Wallet): Promise<zksync.Contract> {
-    return this.deployContractToZksync(wallet, "Perpetual", []);
-  }
+  async init() {}
 
   async deployContractToZksync(
     wallet: zksync.Wallet,
@@ -115,9 +87,35 @@ class ZKNet {
     return await deployer.deploy(contractArtifact, contractArguments);
   }
 
+  // async deployContractToEthereum(
+  //   wallet: zksync.Wallet,
+  //   contractName: string,
+  //   contractArguments: any[]
+  // ): Promise<zksync.Contract> {
+  //   // todo: add deploy to eth logic
+  // }
+
+  async initPerpetualContract(): Promise<zksync.Contract> {
+    // 2. init predefined contract
+    log.info("try to deploy perpetual contract");
+    const perpetual = await this.deployPerpetual(this.adminWallet);
+    log.info("perpetual contract deployed, address: ", perpetual.address);
+
+    const registerETHTx = await perpetual.registerToken(ETH_ADDRESS, ETH_ID);
+    registerETHTx.wait();
+
+    const registerERC20Tx = perpetual.registerToken(ERC20_ADDRESS, ERC20_ID);
+    registerERC20Tx.wait();
+    return perpetual;
+  }
+
+  async deployPerpetual(wallet: zksync.Wallet): Promise<zksync.Contract> {
+    return this.deployContractToZksync(wallet, "Perpetual", []);
+  }
+
   readWallets(
-    l2Provider: zksync.Provider,
-    l1Provider: ethers.providers.Provider
+    zksyncProvider: zksync.Provider,
+    ethProvider: ethers.providers.Provider
   ): zksync.Wallet[] {
     const walletsPath =
       process.env.NODE_ENV === "local"
@@ -130,8 +128,8 @@ class ZKNet {
     walletInfos.forEach((walletInfo) => {
       const wallet: zksync.Wallet = new zksync.Wallet(
         walletInfo.privateKey,
-        l2Provider,
-        l1Provider
+        zksyncProvider,
+        ethProvider
       );
       wallets.push(wallet);
     });

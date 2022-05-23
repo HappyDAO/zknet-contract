@@ -4,7 +4,7 @@ import { log } from "console";
 import { expect } from "chai";
 import * as hre from "hardhat";
 import * as zksync from "zksync-web3";
-import { ethers, logger } from "ethers";
+import { ethers } from "ethers";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 
 import { erc20ABI } from "./erc20.abi";
@@ -27,10 +27,10 @@ function readWallets(
 ): zksync.Wallet[] {
   const walletsPath =
     process.env.NODE_ENV == "local" ? LOCAL_WALLETS_PATH : GOERLI_WALLETS_PATH;
-  let walletInfos: WalletInfo[] = JSON.parse(
+  const walletInfos: WalletInfo[] = JSON.parse(
     fs.readFileSync(walletsPath, "utf8")
   );
-  let wallets: zksync.Wallet[] = [];
+  const wallets: zksync.Wallet[] = [];
   walletInfos.forEach((walletInfo) => {
     const wallet: zksync.Wallet = new zksync.Wallet(
       walletInfo.privateKey,

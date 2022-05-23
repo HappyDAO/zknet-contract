@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
-contract CokeDexGovernor  is Governor, GovernorCompatibilityBravo, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
+contract CokeDexGovernor is Governor, GovernorVotes, GovernorCompatibilityBravo, GovernorVotesQuorumFraction, GovernorTimelockControl {
     constructor(IVotes _token, TimelockController _timelock)
     Governor("CokeDexGovernor")
     GovernorVotes(_token)
@@ -16,11 +16,14 @@ contract CokeDexGovernor  is Governor, GovernorCompatibilityBravo, GovernorVotes
     {}
 
     function votingDelay() public pure override returns (uint256) {
-        return 6575; // 1 day
+        return 0;
+        //6575; // 1 day
     }
 
     function votingPeriod() public pure override returns (uint256) {
-        return 46027; // 1 week
+        return 10;
+        // 46027;
+        // 1 week
     }
 
     function proposalThreshold() public pure override returns (uint256) {
@@ -97,3 +100,5 @@ contract CokeDexGovernor  is Governor, GovernorCompatibilityBravo, GovernorVotes
         return super.supportsInterface(interfaceId);
     }
 }
+
+//
