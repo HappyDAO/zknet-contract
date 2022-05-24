@@ -109,7 +109,7 @@ class ZKNet {
       factoryArtifact,
       wallet.ethWallet()
     );
-    const instance = await factory.deploy(contractArguments);
+    const instance = await factory.deploy(...contractArguments);
 
     await instance.deployed();
     log.info(`contract deployed: ${instance.address}`);

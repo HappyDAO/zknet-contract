@@ -1,9 +1,6 @@
 import { log, ZKNet } from "./zknet";
 import { formatBytes32String } from "ethers/lib/utils";
-import { sleep } from "zksync-web3/build/utils";
 import { ethers } from "ethers";
-import { Artifacts } from "hardhat/internal/artifacts";
-import * as hre from "hardhat";
 
 const zknet = new ZKNet();
 // the vote token contract
@@ -27,23 +24,11 @@ describe("governance", async function () {
 
     log.info("COKE ERC20 contract address: ", cokeErc20Contract.address);
 
-    const artifacts = new Artifacts("artifacts");
-    const factoryArtifact = artifacts.readArtifactSync("MyGovernor");
-    const factory = await hre.ethers.getContractFactoryFromArtifact(
-      factoryArtifact,
-      zknet.adminWallet.ethWallet()
+    cokeDexGovernorContract = await zknet.deployContractToEthereum(
+      zknet.adminWallet,
+      "MyGovernor",
+      [cokeErc20Contract.address]
     );
-    cokeDexGovernorContract = await factory.deploy(cokeErc20Contract.address);
-
-    await cokeDexGovernorContract.deployed();
-    log.info(`contract deployed: ${cokeDexGovernorContract.address}`);
-
-    // TODO: GAGAGA
-    // cokeDexGovernorContract = await zknet.deployContractToEthereum(
-    //   zknet.adminWallet,
-    //   "MyGovernor",
-    //   [cokeErc20Contract.address]
-    // );
 
     log.info(
       "COKE DEX MGR contract address: ",
@@ -83,8 +68,7 @@ describe("governance", async function () {
         "Proposal #1: Give grant to team"
       );
 
-    const x = await proposalTx.wait();
-    log.info(x);
+    await proposalTx.wait();
 
     await cokeDexGovernorContract
       .connect(zknet.adminWallet.ethWallet())
@@ -94,16 +78,5 @@ describe("governance", async function () {
         [transferCalldata],
         formatBytes32String("Proposal #1: Give grant to team")
       );
-
-    // keccak256(bytes(x))
-    //
-    // log.info("proposal id is :", id);
-    // log.info("xxx", id);
-    // const proposalState = await cokeDexGovernorContract
-    //   .connect(zknet.adminWallet)
-    //   .state(id);
-    //
-    // log.info(proposalState.toString());
-    sleep(50 * 1000);
   });
 });
