@@ -3,9 +3,9 @@ import * as hre from "hardhat";
 import * as zksync from "zksync-web3";
 import { ethers } from "ethers";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-
 import { erc20ABI } from "./erc20.abi";
 import { Logger } from "tslog";
+import { Artifacts } from "hardhat/internal/artifacts";
 
 // some account (PubKey -> privKey) pairs
 const LOCAL_WALLETS_PATH = "test/data/local-wallets.json";
@@ -23,7 +23,6 @@ const ERC20_ID = 1;
 
 interface WalletInfo {
   address: string;
-
   privateKey: string;
 }
 
@@ -77,6 +76,12 @@ class ZKNet {
 
   async init() {}
 
+  /**
+   * deploy contract to zksync network
+   * @param wallet
+   * @param contractName
+   * @param contractArguments
+   */
   async deployContractToZksync(
     wallet: zksync.Wallet,
     contractName: string,
@@ -87,30 +92,28 @@ class ZKNet {
     return await deployer.deploy(contractArtifact, contractArguments);
   }
 
-  // async deployContractToEthereum(
-  //   wallet: zksync.Wallet,
-  //   contractName: string,
-  //   contractArguments: any[]
-  // ): Promise<zksync.Contract> {
-  //   // todo: add deploy to eth logic
-  // }
+  /**
+   * deploy contract to Ethereum
+   * @param wallet zkSync wallet which wrapped an ether's wallet
+   * @param contractName name of contract
+   * @param contractArguments arguments of contract constructor
+   */
+  async deployContractToEthereum(
+    wallet: zksync.Wallet,
+    contractName: string,
+    contractArguments: any[]
+  ): Promise<ethers.Contract> {
+    const artifacts = new Artifacts("artifacts");
+    const factoryArtifact = artifacts.readArtifactSync(contractName);
+    const factory = await hre.ethers.getContractFactoryFromArtifact(
+      factoryArtifact,
+      wallet.ethWallet()
+    );
+    const instance = await factory.deploy(contractArguments);
 
-  async initPerpetualContract(): Promise<zksync.Contract> {
-    // 2. init predefined contract
-    log.info("try to deploy perpetual contract");
-    const perpetual = await this.deployPerpetual(this.adminWallet);
-    log.info("perpetual contract deployed, address: ", perpetual.address);
-
-    const registerETHTx = await perpetual.registerToken(ETH_ADDRESS, ETH_ID);
-    registerETHTx.wait();
-
-    const registerERC20Tx = perpetual.registerToken(ERC20_ADDRESS, ERC20_ID);
-    registerERC20Tx.wait();
-    return perpetual;
-  }
-
-  async deployPerpetual(wallet: zksync.Wallet): Promise<zksync.Contract> {
-    return this.deployContractToZksync(wallet, "Perpetual", []);
+    await instance.deployed();
+    log.info(`contract deployed: ${instance.address}`);
+    return instance;
   }
 
   readWallets(

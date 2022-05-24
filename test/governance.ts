@@ -1,13 +1,15 @@
 import { log, ZKNet } from "./zknet";
-import * as zksync from "zksync-web3";
 import { formatBytes32String } from "ethers/lib/utils";
 import { sleep } from "zksync-web3/build/utils";
+import { ethers } from "ethers";
+import { Artifacts } from "hardhat/internal/artifacts";
+import * as hre from "hardhat";
 
 const zknet = new ZKNet();
 // the vote token contract
-let cokeErc20Contract: zksync.Contract;
+let cokeErc20Contract: ethers.Contract;
 // the governor contract
-let cokeDexGovernorContract: zksync.Contract;
+let cokeDexGovernorContract: ethers.Contract;
 
 async function init() {
   await zknet.init();
@@ -17,18 +19,32 @@ describe("governance", async function () {
   before(init);
 
   it("1. deploy cokeErc20", async function () {
-    cokeErc20Contract = await zknet.deployContractToZksync(
+    cokeErc20Contract = await zknet.deployContractToEthereum(
       zknet.adminWallet,
       "CokeMgrToken",
-      [100000000]
+      [100]
     );
+
     log.info("COKE ERC20 contract address: ", cokeErc20Contract.address);
 
-    cokeDexGovernorContract = await zknet.deployContractToZksync(
-      zknet.adminWallet,
-      "MyGovernor",
-      [cokeErc20Contract.address] // TODO: FIX ME not set timelock contract address
+    const artifacts = new Artifacts("artifacts");
+    const factoryArtifact = artifacts.readArtifactSync("MyGovernor");
+    const factory = await hre.ethers.getContractFactoryFromArtifact(
+      factoryArtifact,
+      zknet.adminWallet.ethWallet()
     );
+    cokeDexGovernorContract = await factory.deploy(cokeErc20Contract.address);
+
+    await cokeDexGovernorContract.deployed();
+    log.info(`contract deployed: ${cokeDexGovernorContract.address}`);
+
+    // TODO: GAGAGA
+    // cokeDexGovernorContract = await zknet.deployContractToEthereum(
+    //   zknet.adminWallet,
+    //   "MyGovernor",
+    //   [cokeErc20Contract.address]
+    // );
+
     log.info(
       "COKE DEX MGR contract address: ",
       cokeDexGovernorContract.address
@@ -45,27 +61,21 @@ describe("governance", async function () {
     );
 
     cokeDexGovernorContract
-      .connect(zknet.adminWallet)
+      .connect(zknet.adminWallet.ethWallet())
       .on("ProposalCreated", (proposalId, proposer) => {
-        log.info("event: ", proposalId);
+        log.info("proposalId: ", proposalId);
         log.info("proposer: ", proposer);
 
-        cokeErc20Contract
-          .connect(zknet.adminWallet)
-          .transfer(zknet.adminWallet, zknet.normalWallets[1], 100);
-
-        sleep(500);
-
         cokeDexGovernorContract
-          .connect(zknet.adminWallet)
+          .connect(zknet.adminWallet.ethWallet())
           .state(proposalId)
           .then(function (state: any) {
-            log.info(state.toString());
+            log.info("proposal state is: ", state.toString());
           });
       });
 
     const proposalTx = await cokeDexGovernorContract
-      .connect(zknet.adminWallet)
+      .connect(zknet.adminWallet.ethWallet())
       .propose(
         [tokenAddr],
         [0],
@@ -73,10 +83,11 @@ describe("governance", async function () {
         "Proposal #1: Give grant to team"
       );
 
-    await proposalTx.wait();
+    const x = await proposalTx.wait();
+    log.info(x);
 
     await cokeDexGovernorContract
-      .connect(zknet.adminWallet)
+      .connect(zknet.adminWallet.ethWallet())
       .hashProposal(
         [tokenAddr],
         [0],
@@ -93,5 +104,6 @@ describe("governance", async function () {
     //   .state(id);
     //
     // log.info(proposalState.toString());
+    sleep(50 * 1000);
   });
 });
