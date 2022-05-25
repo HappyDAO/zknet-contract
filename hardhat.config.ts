@@ -1,43 +1,100 @@
 import * as dotenv from "dotenv";
 
-import { HardhatUserConfig, task } from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-solhint";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
-import "solidity-coverage";
-import '@openzeppelin/hardhat-upgrades';
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+import "hardhat-abi-exporter";
+import "@primitivefi/hardhat-dodoc";
+import { resolve } from "path";
 
-dotenv.config();
+const zknetEnv = process.env.ZKNET_ENV == undefined ? "local" : process.env.ZKNET_ENV;
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
+let defaultNetwork = "l2";
+let contractSource = "./contracts";
 
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
+dotenv.config({ path: resolve(__dirname, "./env/.env." + zknetEnv) });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+switch (process.env.COMPILE_TARGET) {
+  case "l1":
+    contractSource += "/l1";
+    defaultNetwork = "l1";
+    break;
+  case "l2":
+    contractSource += "/l2";
+    break;
+}
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.4",
+  defaultNetwork: defaultNetwork,
+  zksolc: {
+    version: "0.1.0",
+    compilerSource: "docker",
+    settings: {
+      compilerPath: "zksolc",
+      optimizer: {
+        enabled: true,
+      },
+      experimental: {
+        dockerImage: "matterlabs/zksolc",
+      },
+    },
+  },
+  zkSyncDeploy: {
+    zkSyncNetwork: process.env.ZKSYNC_NETWORK,
+    ethNetwork: process.env.ETH_NETWORK,
+  },
+  solidity: {
+    version: "0.8.4",
+    settings: {
+      optimizer: {
+        enabled: true,
+      },
+    },
+  },
+  paths: {
+    sources: contractSource,
+  },
   networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    l1: {
+      zksync: false,
+      url: process.env.ETH_NETWORK,
+    },
+    l2: {
+      zksync: true,
+      url: process.env.ZKSYNC_NETWORK,
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    enabled: process.env.ENABLE_REPORT_GAS === "true",
     currency: "USD",
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  abiExporter: {
+    path: "./abi",
+    runOnCompile: false,
+    clear: true,
+    flat: true,
+    only: [":Perpetual$", ":Governance$"],
+    spacing: 2,
+    pretty: true,
+  },
+  dodoc: {
+    runOnCompile: false,
+    outputDir: "./docs",
+    keepFileStructure: true,
+    freshOutput: true,
+  },
+  typechain: {
+    outDir: "typechain",
+    target: "ethers-v5",
   },
 };
 
