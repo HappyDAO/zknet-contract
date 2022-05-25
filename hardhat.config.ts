@@ -1,29 +1,29 @@
-import * as dotenv from "dotenv";
-
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-solhint";
-import "@typechain/hardhat";
-import "hardhat-gas-reporter";
 import "@matterlabs/hardhat-zksync-deploy";
 import "@matterlabs/hardhat-zksync-solc";
-import "hardhat-abi-exporter";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-etherscan";
+import "@nomiclabs/hardhat-solhint";
+import "@nomiclabs/hardhat-waffle";
 import "@primitivefi/hardhat-dodoc";
+import "@typechain/hardhat";
+import * as dotenv from "dotenv";
+import "hardhat-abi-exporter";
+import "hardhat-gas-reporter";
+import { HardhatUserConfig } from "hardhat/config";
 import { resolve } from "path";
 
 const zknetEnv = process.env.ZKNET_ENV == undefined ? "local" : process.env.ZKNET_ENV;
 
-let defaultNetwork = "l2";
-let contractSource = "./contracts";
-
 dotenv.config({ path: resolve(__dirname, "./env/.env." + zknetEnv) });
 
+let defaultNetwork = "l2";
+let contractSource = "./contracts";
+let typechainOutDir = "typechain-l2";
 switch (process.env.COMPILE_TARGET) {
   case "l1":
     contractSource += "/l1";
     defaultNetwork = "l1";
+    typechainOutDir = "typechain-l1";
     break;
   case "l2":
     contractSource += "/l2";
@@ -93,8 +93,11 @@ const config: HardhatUserConfig = {
     freshOutput: true,
   },
   typechain: {
-    outDir: "typechain",
+    outDir: typechainOutDir,
     target: "ethers-v5",
+  },
+  mocha: {
+    timeout: 100000000,
   },
 };
 

@@ -7,7 +7,7 @@ cache
 cache-zk
 docs
 node_modules
-typechain
+typechain*
 zksync-docker
 coverage*
 gasReporterOutput.json

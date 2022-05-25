@@ -1,7 +1,7 @@
-import { pino } from "pino";
-import pretty from "pino-pretty";
-import { pinoCaller } from "pino-caller";
 import { resolve } from "path";
+import { pino } from "pino";
+import { pinoCaller } from "pino-caller";
+import pretty from "pino-pretty";
 
 export const logger = pinoCaller(
   pino(

@@ -1,4 +1,5 @@
 import * as zksync from "zksync-web3";
+
 import { logger } from "../util/log";
 import { PerpetualRuntime } from "../util/perpetual";
 
