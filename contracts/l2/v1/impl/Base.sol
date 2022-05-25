@@ -5,9 +5,9 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-import {Types} from "../lib/Types.sol";
-import {Storage} from "./Storage.sol";
-import {AccessControl} from "../lib/AccessControl.sol";
+import { Types } from "../lib/Types.sol";
+import { Storage } from "./Storage.sol";
+import { AccessControl } from "../lib/AccessControl.sol";
 
 contract Base is Storage, AccessControl, ReentrancyGuard {
     function _contractAddress() internal view returns (address) {
@@ -24,11 +24,7 @@ contract Base is Storage, AccessControl, ReentrancyGuard {
         return tokenAddr;
     }
 
-    function _getAndCheckPosition(uint256 positionId, address owner)
-        internal
-        view
-        returns (Types.Position memory)
-    {
+    function _getAndCheckPosition(uint64 positionId, address owner) internal view returns (Types.Position memory) {
         Types.Position memory position = _position[positionId];
         require(position.id != 0, "Base: position not exist");
         require(position.owner == owner, "Base: not position owner");

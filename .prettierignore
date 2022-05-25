@@ -1,5 +1,13 @@
-node_modules
+.yarn
+.git
+abi
 artifacts
+artifacts-zk
 cache
+cache-zk
+docs
+node_modules
+typechain
+zksync-docker
 coverage*
 gasReporterOutput.json
