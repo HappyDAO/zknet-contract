@@ -1,11 +1,10 @@
-import * as fs from "fs";
-
-import * as zksync from "zksync-web3";
-import { ethers } from "ethers";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
+import { ethers } from "ethers";
+import * as fs from "fs";
 import * as hre from "hardhat";
 import { Artifacts } from "hardhat/internal/artifacts";
 import { resolve } from "path";
+import * as zksync from "zksync-web3";
 
 export const ETH_ADDRESS = zksync.utils.ETH_ADDRESS;
 
@@ -20,7 +19,7 @@ export class BaseRuntime {
 
   constructor() {
     this.providerL1 = ethers.getDefaultProvider(process.env.ETH_NETWORK);
-    this.providerL2 = zksync.Provider.getDefaultProvider();
+    this.providerL2 = new zksync.Provider(process.env.ZKSYNC_NETWORK);
     this.artifactsL1 = new Artifacts("artifacts");
     [this.deployWallet, ...this.wallets] = readWallets(this.providerL2, this.providerL1);
   }
@@ -84,7 +83,7 @@ export class BaseRuntime {
     }
     const artifact = this.artifactsL1.readArtifactSync(contractName);
     const contractFactory = await hre.ethers.getContractFactoryFromArtifact(artifact);
-    const contract = await contractFactory.connect(deployWallet).deploy(constructorArguments);
+    const contract = await contractFactory.connect(deployWallet).deploy(...constructorArguments);
     await contract.deployed();
     return contract;
   }

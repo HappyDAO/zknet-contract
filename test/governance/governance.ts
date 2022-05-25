@@ -1,15 +1,15 @@
-import { ethers } from "ethers";
+import { Governance } from "../../typechain-l1";
 import { GovernanceRuntime } from "../../util/governance";
 import { logger } from "../../util/log";
 
 describe("Governance", function () {
-  let governance: ethers.Contract;
+  let governance: Governance;
   let runtime: GovernanceRuntime;
 
   async function init() {
     logger.info("Init Governance");
     runtime = new GovernanceRuntime();
-    governance = await runtime.deployL1Contract("Governance");
+    governance = await runtime.deployGovernance();
   }
 
   beforeEach(init);

@@ -1,32 +1,30 @@
 import { expect } from "chai";
 import * as zksync from "zksync-web3";
-import { erc20ABI } from "../../util/erc20.abi";
+
+import { IERC20, Perpetual } from "../../typechain-l2";
 import { ETH_ADDRESS } from "../../util/base";
-import { PerpetualRuntime, ERC20_ADDRESS } from "../../util/perpetual";
+import { erc20ABI } from "../../util/erc20.abi";
 import { logger } from "../../util/log";
+import { ERC20_ADDRESS, PerpetualRuntime } from "../../util/perpetual";
 
 const ETH_ID = 0;
 const ERC20_ID = 1;
 
 describe("Perpetual", function () {
-  let perpetual: zksync.Contract;
+  let perpetual: Perpetual;
   let runtime: PerpetualRuntime;
-  let erc20L2: zksync.Contract;
-  let ethL2: zksync.Contract;
+  let erc20L2: IERC20;
+  let ethL2: IERC20;
 
   async function init() {
     logger.info("Init Perpetual");
     runtime = new PerpetualRuntime();
-    erc20L2 = new zksync.Contract(ERC20_ADDRESS, erc20ABI, runtime.providerL2);
-    ethL2 = new zksync.Contract(ETH_ADDRESS, erc20ABI, runtime.providerL2);
+    erc20L2 = new zksync.Contract(ERC20_ADDRESS, erc20ABI, runtime.providerL2) as IERC20;
+    ethL2 = new zksync.Contract(ETH_ADDRESS, erc20ABI, runtime.providerL2) as IERC20;
+    perpetual = await runtime.deployPerpetual();
 
-    perpetual = await runtime.deployL2Contract("Perpetual");
-
-    const registerETHTx = await perpetual.registerToken(ETH_ADDRESS, ETH_ID);
-    registerETHTx.wait();
-
-    const registerERC20Tx = await perpetual.registerToken(ERC20_ADDRESS, ERC20_ID);
-    registerERC20Tx.wait();
+    await (await perpetual.registerToken(ETH_ADDRESS, ETH_ID)).wait();
+    await (await perpetual.registerToken(ERC20_ADDRESS, ERC20_ID)).wait();
   }
 
   beforeEach(init);

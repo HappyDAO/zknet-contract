@@ -1,4 +1,6 @@
 import * as zksync from "zksync-web3";
+
+import { Perpetual } from "../typechain-l2";
 import { BaseRuntime } from "./base";
 
 export const ERC20_ADDRESS = "0x3fad2b2e21ea1c96618cc76a42fb5a77c3f71c6f";
@@ -12,6 +14,10 @@ export class PerpetualRuntime extends BaseRuntime {
     if (erc20Address !== undefined) {
       this.erc20Address = erc20Address;
     }
+  }
+
+  public async deployPerpetual(): Promise<Perpetual> {
+    return (await this.deployL2Contract("Perpetual")) as Perpetual;
   }
 
   public async prepareL2Wallet(ethAmount: string, erc20Amount?: string, l1PrivateKey?: string): Promise<zksync.Wallet> {
