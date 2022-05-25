@@ -2,6 +2,4 @@
 
 pragma solidity ^0.8.4;
 
-interface IHandleFromL1 {
-
-}
+interface IHandleFromL1 {}

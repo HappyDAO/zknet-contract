@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 library Types {
     struct Position {
-        uint256 id;
+        uint64 id;
         address owner;
         int256 marginAmount;
         uint32 marginToken;
@@ -16,7 +16,7 @@ library Types {
     struct Order {
         uint256 id;
         address trader;
-        uint256 positionId;
+        uint64 positionId;
         uint32 positionToken;
         int256 positionAmount;
         int256 remainAmount;

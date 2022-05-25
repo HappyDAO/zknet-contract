@@ -1,9 +1,7 @@
-version: '3.2'
+version: "3.2"
 services:
   geth:
     image: "matterlabs/geth:latest"
-    logging:
-        driver: none 
     ports:
       - "8545:8545"
       - "8546:8546"
@@ -14,7 +12,7 @@ services:
   postgres:
     image: "postgres:12"
     logging:
-      driver: none 
+      driver: none
     ports:
       - "5432:5432"
     volumes:

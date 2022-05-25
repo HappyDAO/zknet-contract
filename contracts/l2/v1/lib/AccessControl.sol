@@ -8,10 +8,7 @@ contract AccessControl is Context {
     address internal _owner;
     address internal _manager;
 
-    event ManagerChanged(
-        address indexed previousManager,
-        address indexed newManager
-    );
+    event ManagerChanged(address indexed previousManager, address indexed newManager);
 
     constructor() {
         _owner = _msgSender();
@@ -27,18 +24,12 @@ contract AccessControl is Context {
     }
 
     modifier onlyOwner() {
-        require(
-            owner() == _msgSender(),
-            "AccessControl: caller is not the owner"
-        );
+        require(owner() == _msgSender(), "AccessControl: caller is not the owner");
         _;
     }
 
     modifier onlyManager() {
-        require(
-            manager() == _msgSender(),
-            "AccessControl: caller is not the manager"
-        );
+        require(manager() == _msgSender(), "AccessControl: caller is not the manager");
         _;
     }
 
@@ -47,10 +38,7 @@ contract AccessControl is Context {
     }
 
     function chanageManager(address newManager) public virtual onlyOwner {
-        require(
-            newManager != address(0),
-            "Ownable: new manager is the zero address"
-        );
+        require(newManager != address(0), "Ownable: new manager is the zero address");
         _chanageManager(newManager);
     }
 
