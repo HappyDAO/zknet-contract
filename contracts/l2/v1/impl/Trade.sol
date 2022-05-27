@@ -5,8 +5,9 @@ pragma solidity ^0.8.4;
 import { ITrade } from "../interface/ITrade.sol";
 import { Base } from "./Base.sol";
 import { Types } from "../lib/Types.sol";
+import { ChainId } from "../lib/ChainId.sol";
 
-contract Trade is ITrade, Base {
+abstract contract Trade is ITrade, Base {
     struct SettlementInfoExtend {
         int256 partAActualAmount;
         int256 partBActualAmount;
@@ -14,7 +15,40 @@ contract Trade is ITrade, Base {
         uint256 partBFee;
     }
 
-    function _checkOrder(Order calldata order, int256 actualAmount) internal pure {
+    function _verifyOrder(Order calldata order) internal view {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        (v, r, s) = _splitSignature(order.signature);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                domainSeparator(),
+                keccak256(
+                    abi.encode(
+                        _ORDER_TYPEHASH,
+                        order.id,
+                        order.trader,
+                        order.positionId,
+                        order.positionToken,
+                        order.positionAmount,
+                        order.fee,
+                        order.timestamp
+                    )
+                )
+            )
+        );
+
+        address recoveredAddress = ecrecover(digest, v, r, s);
+        require(recoveredAddress != address(0), "Trade: invalid order signature");
+        require(recoveredAddress == order.trader, "Trade: unauthorized order");
+    }
+
+    function _checkOrder(Order calldata order, int256 actualAmount) internal view {
+        //  verfy signature
+        _verifyOrder(order);
+
         require(order.id != 0, "Trade: order id cannot be 0");
         require(order.positionAmount != 0, "Trade: order position amount cannot be 0");
 
@@ -25,7 +59,6 @@ contract Trade is ITrade, Base {
             require(actualAmount > 0, "Trade: order position amount and actual amount not match");
             require(actualAmount <= order.positionAmount, "Trade: order position amount and actual amount not match");
         }
-        // TODO: verfy signature
     }
 
     function _checkRepeatSettlement(Types.Order memory existedOrder, int256 actualAmount) internal pure {
@@ -44,7 +77,7 @@ contract Trade is ITrade, Base {
         Types.Order memory existedOrderB,
         Order calldata partB,
         SettlementInfoExtend memory settlementInfo
-    ) internal pure {
+    ) internal view {
         _checkOrder(partA, settlementInfo.partAActualAmount);
         _checkRepeatSettlement(existedOrderA, settlementInfo.partAActualAmount);
 

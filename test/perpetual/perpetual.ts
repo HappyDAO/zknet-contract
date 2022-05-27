@@ -11,8 +11,8 @@ const ETH_ID = 0;
 const ERC20_ID = 1;
 
 describe("Perpetual", function () {
-  let perpetual: Perpetual;
   let runtime: PerpetualRuntime;
+  let perpetual: Perpetual;
   let erc20L2: IERC20;
   let ethL2: IERC20;
 
@@ -66,26 +66,26 @@ describe("Perpetual", function () {
     logger.info("Settlement order");
     await (
       await perpetual.connect(runtime.deployWallet).settlement(
-        {
+        await runtime.signOrder(randWallet1, perpetual.address, {
           id: orderId1,
-          trader: randWallet1.address,
+          trader: "",
           positionId: positionId1,
           positionToken: ERC20_ID,
           positionAmount: 100,
           fee: 1,
           timestamp: Math.floor(Date.now() / 1000),
-          signature: [1, 2, 3],
-        },
-        {
+          signature: "",
+        }),
+        await runtime.signOrder(randWallet2, perpetual.address, {
           id: orderId2,
-          trader: randWallet2.address,
+          trader: "",
           positionId: positionId2,
           positionToken: ERC20_ID,
           positionAmount: -100,
           fee: 1,
           timestamp: Math.floor(Date.now() / 1000),
-          signature: [1, 2, 3],
-        },
+          signature: "",
+        }),
         {
           positionSold: 100,
           partAFee: 1,

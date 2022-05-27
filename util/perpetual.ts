@@ -1,23 +1,34 @@
 import * as zksync from "zksync-web3";
 
-import { Perpetual } from "../typechain-l2";
+import { ITrade, Perpetual } from "../typechain-l2";
 import { BaseRuntime } from "./base";
 
 export const ERC20_ADDRESS = "0x3fad2b2e21ea1c96618cc76a42fb5a77c3f71c6f";
 
-export class PerpetualRuntime extends BaseRuntime {
-  public erc20Address: string;
+const orderTypes = {
+  Order: [
+    { name: "id", type: "uint256" },
+    { name: "trader", type: "address" },
+    { name: "positionId", type: "uint64" },
+    { name: "positionToken", type: "uint32" },
+    { name: "positionAmount", type: "int256" },
+    { name: "fee", type: "uint256" },
+    { name: "timestamp", type: "uint32" },
+  ],
+};
 
-  constructor(erc20Address?: string) {
+export class PerpetualRuntime extends BaseRuntime {
+  constructor(
+    public erc20Address: string = ERC20_ADDRESS,
+    private eip712DomainName: string = "ZKnet Perpetual",
+    private eip712DomainVersion: string = "1",
+    private eip712ChainId: number = 0,
+  ) {
     super();
-    this.erc20Address = ERC20_ADDRESS;
-    if (erc20Address !== undefined) {
-      this.erc20Address = erc20Address;
-    }
   }
 
   public async deployPerpetual(): Promise<Perpetual> {
-    return (await this.deployL2Contract("Perpetual")) as Perpetual;
+    return (await this.deployL2Contract("Perpetual", [this.eip712DomainName, this.eip712DomainVersion])) as Perpetual;
   }
 
   public async prepareL2Wallet(ethAmount: string, erc20Amount?: string, l1PrivateKey?: string): Promise<zksync.Wallet> {
@@ -36,5 +47,31 @@ export class PerpetualRuntime extends BaseRuntime {
     }
 
     return randWallet;
+  }
+
+  public async signOrder(
+    wallet: zksync.Wallet,
+    contractAddress: string,
+    order: ITrade.OrderStruct,
+  ): Promise<ITrade.OrderStruct> {
+    const domain = {
+      name: this.eip712DomainName,
+      version: this.eip712DomainVersion,
+      chainId: this.eip712ChainId,
+      verifyingContract: contractAddress,
+    };
+
+    order.trader = wallet.address;
+    const message = {
+      id: order.id,
+      trader: order.trader,
+      positionId: order.positionId,
+      positionToken: order.positionToken,
+      positionAmount: order.positionAmount,
+      fee: order.fee,
+      timestamp: order.timestamp,
+    };
+    order.signature = await wallet._signTypedData(domain, orderTypes, message);
+    return order;
   }
 }

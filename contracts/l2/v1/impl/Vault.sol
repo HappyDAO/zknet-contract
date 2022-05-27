@@ -9,7 +9,7 @@ import { Types } from "../lib/Types.sol";
 import { Base } from "./Base.sol";
 import { IVault } from "../interface/IVault.sol";
 
-contract Vault is IVault, Base {
+abstract contract Vault is IVault, Base {
     function balanceOf(address account, uint32 token) external view override returns (int256) {
         return _balance[account][token];
     }

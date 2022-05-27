@@ -37,6 +37,23 @@ function disableManager() external nonpayable
 
 
 
+### domainSeparator
+
+```solidity
+function domainSeparator() external view returns (bytes32)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes32 | undefined |
+
 ### manager
 
 ```solidity
