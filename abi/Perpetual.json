@@ -1,5 +1,5 @@
 [
-  "constructor()",
+  "constructor(string,string)",
   "event LogBind(string,string)",
   "event LogDeposit(uint32 indexed,address indexed,uint256)",
   "event LogFundingTick(uint32,int256)",
@@ -15,6 +15,7 @@
   "function deleverage(tuple(uint64,uint256,uint256),tuple(uint64,uint256,uint256))",
   "function deposit(uint32,uint256)",
   "function disableManager()",
+  "function domainSeparator() view returns (bytes32)",
   "function fundingTick(tuple(uint32,uint256)[])",
   "function liquidate(uint64,tuple(uint256,address,uint64,uint32,int256,uint256,uint32,bytes),tuple(uint256,uint256,uint256))",
   "function manager() view returns (address)",

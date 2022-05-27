@@ -5,20 +5,37 @@ pragma solidity ^0.8.4;
 import { Types } from "../lib/Types.sol";
 
 contract Storage {
-    // token id => token address(erc20), reduce storage
+    /// @dev token id => token address(erc20), reduce storage
     mapping(uint32 => address) internal _token;
 
-    // trader => asset id
+    /// @dev trader => asset id
     mapping(address => mapping(uint32 => int256)) internal _balance;
 
-    // l2 address => l1 address
+    /// @dev l2 address => l1 address
     mapping(address => address) internal _bindingAccount;
 
-    // position id => position
+    /// @dev  position id => position
     mapping(uint64 => Types.Position) internal _position;
 
-    // order id => order
+    /// @dev  order id => order
     mapping(uint256 => Types.Order) internal _order;
 
+    /// @dev The hash of the name used in the permit signature verification
+    bytes32 internal immutable _nameHash;
+
+    /// @dev The hash of the version string used in the permit signature verification
+    bytes32 internal immutable _versionHash;
+
+    /// @dev Value is equal to keccak256( "Order(uint256 id,address trader,uint64 positionId,uint32 positionToken,int256 positionAmount,uint256 fee,uint32 timestamp)");
+    bytes32 internal constant _ORDER_TYPEHASH =
+        keccak256(
+            "Order(uint256 id,address trader,uint64 positionId,uint32 positionToken,int256 positionAmount,uint256 fee,uint32 timestamp)"
+        );
+
     // TODO:不同的合约不同的配置参数，价格
+
+    constructor(string memory name, string memory version) {
+        _nameHash = keccak256(bytes(name));
+        _versionHash = keccak256(bytes(version));
+    }
 }
