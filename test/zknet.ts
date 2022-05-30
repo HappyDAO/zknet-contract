@@ -112,7 +112,9 @@ class ZKNet {
     const instance = await factory.deploy(...contractArguments);
 
     await instance.deployed();
-    log.info(`contract deployed: ${instance.address}`);
+    log.info(
+      `contract [${contractName}] deployed on Ethereum: ${instance.address}`
+    );
     return instance;
   }
 

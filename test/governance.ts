@@ -22,17 +22,10 @@ describe("governance", async function () {
       [100]
     );
 
-    log.info("COKE ERC20 contract address: ", cokeErc20Contract.address);
-
     cokeDexGovernorContract = await zknet.deployContractToEthereum(
       zknet.adminWallet,
       "MyGovernor",
       [cokeErc20Contract.address]
-    );
-
-    log.info(
-      "COKE DEX MGR contract address: ",
-      cokeDexGovernorContract.address
     );
   });
 
