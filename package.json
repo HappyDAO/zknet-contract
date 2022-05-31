@@ -71,7 +71,8 @@
     "ts-node": "^10.8.0",
     "typechain": "^8.0.0",
     "typescript": "^4.6.4",
-    "zksync-web3": "^0.4.0"
+    "zksync-web3": "^0.4.0",
+    "abi-decoder": "^2.4.0"
   },
   "dependencies": {
     "tslog": "^3.3.3"

@@ -12,10 +12,10 @@
 //   await zknet.init();
 // }
 //
-// describe("governance", async function () {
+// describe("governance", async function() {
 //   before(init);
 //
-//   it("1. deploy cokeErc20", async function () {
+//   it("1. deploy cokeErc20", async function() {
 //     cokeErc20Contract = await zknet.deployContractToEthereum(
 //       zknet.adminWallet,
 //       "CokeMgrToken",
@@ -29,7 +29,7 @@
 //     );
 //   });
 //
-//   it("2. create a proposal", async function () {
+//   it("2. create a proposal", async function() {
 //     const tokenAddr = cokeErc20Contract.address;
 //     const teamAddr = "0xa61464658AfeAf65CccaaFD3a512b69A83B77618";
 //     const grantAmount = 100;
@@ -47,7 +47,7 @@
 //         cokeDexGovernorContract
 //           .connect(zknet.adminWallet.ethWallet())
 //           .state(proposalId)
-//           .then(function (state: any) {
+//           .then(function(state: any) {
 //             log.info("proposal state is: ", state.toString());
 //           });
 //       });
