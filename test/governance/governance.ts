@@ -1,8 +1,8 @@
 import { GovernanceRuntime } from "../../util/governance";
 import { CokeDexGovernor, CokeMgrToken } from "../../typechain-l1";
 import { logger } from "../../util/log";
-import { expect } from "chai";
-import { ethers } from "ethers";
+import { assert, expect } from "chai";
+import { BigNumber, ethers } from "ethers";
 
 const utils = ethers.utils;
 
@@ -10,6 +10,7 @@ describe("Governance", function() {
   let governance: CokeDexGovernor;
   let governanceToken: CokeMgrToken;
   let runtime: GovernanceRuntime;
+  let proposalId: BigNumber;
 
   async function init() {
     // 1. deploy governance token and governance mgr contract
@@ -29,24 +30,35 @@ describe("Governance", function() {
 
   it("1. Submit proposal", async function() {
     const tokenAddr = governanceToken.address;
-    const teamAddr = runtime.wallets[0].address;
+    const teamAddr = runtime.wallets[1].ethWallet().address;
     const grantAmount = 100;
     const transferCalldata = governanceToken.interface.encodeFunctionData(
       "transfer",
       [teamAddr, grantAmount]
     );
+    const desc = "Proposal #1: Give grant to team";
 
-    const res = await governance.propose([tokenAddr], [0], [transferCalldata], "Proposal #1: Give grant to team");
+    const proposeTx = await governance.propose([tokenAddr], [0], [transferCalldata], desc);
+    const receipt = await proposeTx.wait();
+    const decodeRes = governance.interface.decodeFunctionResult("propose", receipt.logs[0].data);
+    proposalId = decodeRes[0] as BigNumber;
 
-    const proposalId = utils.defaultAbiCoder.decode(["uint256"], res.data);
-    
     logger.info(`decode Proposal id is ${proposalId}`);
 
-    // const hashId = await governance.hashProposal([tokenAddr], [0], [transferCalldata], utils.formatBytes32String("Proposal #1: Give grant to team"));
-    // logger.info(`#1 proposal id is: ${hashId}`);
+    const hashId = await governance.hashProposal([tokenAddr],
+      [0],
+      [transferCalldata],
+      utils.keccak256(utils.toUtf8Bytes(desc)));
 
+    assert(hashId.eq(proposalId), "submit proposal hash should be equal to the calc proposal hash");
+  });
 
-    expect(await governance.state(proposalId)).to.equal(1);
+  it("2. Vote on a proposal", async function() {
+    logger.info("vote");
+  });
+
+  it("3. Execute the proposal", async function() {
+    logger.info("start to execute a proposal");
   });
 
 });

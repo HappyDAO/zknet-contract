@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 contract CokeDexGovernor is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction {
     constructor(IVotes _token)
     Governor("CokeDexGovernor")
-    GovernorSettings(0 /* 1 block */, 45818 /* 1 week */, 0)
+    GovernorSettings(1 /* 1 block */, 45818 /* 1 week */, 0)
     GovernorVotes(_token)
     GovernorVotesQuorumFraction(4)
     {}
