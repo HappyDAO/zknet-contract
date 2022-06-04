@@ -29,11 +29,13 @@ abstract contract Trade is ITrade, Base {
                     abi.encode(
                         _ORDER_TYPEHASH,
                         order.id,
+                        keccak256(bytes(order.typ)),
                         order.trader,
                         order.positionId,
                         order.positionToken,
                         order.positionAmount,
                         order.fee,
+                        keccak256(bytes(order.extend)),
                         order.timestamp
                     )
                 )

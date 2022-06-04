@@ -29,7 +29,7 @@ contract Storage {
     /// @dev Value is equal to keccak256( "Order(uint256 id,address trader,uint64 positionId,uint32 positionToken,int256 positionAmount,uint256 fee,uint32 timestamp)");
     bytes32 internal constant _ORDER_TYPEHASH =
         keccak256(
-            "Order(uint256 id,address trader,uint64 positionId,uint32 positionToken,int256 positionAmount,uint256 fee,uint32 timestamp)"
+            "Order(uint256 id,string typ,address trader,uint64 positionId,uint32 positionToken,int256 positionAmount,uint256 fee,string extend,uint32 timestamp)"
         );
 
     // TODO:不同的合约不同的配置参数，价格

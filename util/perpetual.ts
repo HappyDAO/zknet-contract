@@ -8,11 +8,13 @@ export const ERC20_ADDRESS = "0x3fad2b2e21ea1c96618cc76a42fb5a77c3f71c6f";
 const orderTypes = {
   Order: [
     { name: "id", type: "uint256" },
+    { name: "typ", type: "string" },
     { name: "trader", type: "address" },
     { name: "positionId", type: "uint64" },
     { name: "positionToken", type: "uint32" },
     { name: "positionAmount", type: "int256" },
     { name: "fee", type: "uint256" },
+    { name: "extend", type: "string" },
     { name: "timestamp", type: "uint32" },
   ],
 };
@@ -64,11 +66,13 @@ export class PerpetualRuntime extends BaseRuntime {
     order.trader = wallet.address;
     const message = {
       id: order.id,
+      typ: order.typ,
       trader: order.trader,
       positionId: order.positionId,
       positionToken: order.positionToken,
       positionAmount: order.positionAmount,
       fee: order.fee,
+      extend: order.extend,
       timestamp: order.timestamp,
     };
     order.signature = await wallet._signTypedData(domain, orderTypes, message);

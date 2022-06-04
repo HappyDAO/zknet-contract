@@ -11,11 +11,13 @@ pragma solidity ^0.8.4;
 interface ITrade {
     struct Order {
         uint256 id;
+        string typ;
         address trader;
         uint64 positionId;
         uint32 positionToken;
         int256 positionAmount;
         uint256 fee;
+        string extend;
         uint32 timestamp;
         bytes signature;
     }
