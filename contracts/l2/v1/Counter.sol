@@ -9,7 +9,7 @@ contract Counter {
         governance = newGovernance;
     }
 
-    function increment(uint add) public {
+    function increment(uint256 add) public {
         require(msg.sender == governance, "Only governance is allowed");
 
         value += add;
