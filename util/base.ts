@@ -44,7 +44,7 @@ export class BaseRuntime {
         gasLimit: 21000,
         gasPrice: gasPrice,
         to: randWallet.address,
-        value: ethers.utils.parseEther(ethAmount)
+        value: ethers.utils.parseEther(ethAmount),
       })
     ).wait();
 
@@ -66,7 +66,7 @@ export class BaseRuntime {
         to: randWallet.address,
         token: ETH_ADDRESS,
         amount: ethers.utils.parseEther(ethAmount),
-        approveERC20: true
+        approveERC20: true,
       })
     ).wait();
 
@@ -76,7 +76,7 @@ export class BaseRuntime {
   public async deployL1Contract(
     contractName: string,
     constructorArguments: any[] = [],
-    deployWallet?: ethers.Wallet
+    deployWallet?: ethers.Wallet,
   ): Promise<ethers.Contract> {
     if (deployWallet == undefined) {
       deployWallet = this.deployWallet.ethWallet();
@@ -91,7 +91,7 @@ export class BaseRuntime {
   public async deployL2Contract(
     contractName: string,
     constructorArguments: any[] = [],
-    deployWallet?: zksync.Wallet
+    deployWallet?: zksync.Wallet,
   ): Promise<zksync.Contract> {
     if (deployWallet == undefined) {
       deployWallet = this.deployWallet;
@@ -139,4 +139,3 @@ function readWallets(l2Provider: zksync.Provider, l1Provider: ethers.providers.P
   });
   return wallets;
 }
-
