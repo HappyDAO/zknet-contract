@@ -1309,6 +1309,11 @@
     dockerode "^3.3.1"
     semver "^7.3.7"
 
+"@matterlabs/zksync-contracts@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.npmmirror.com/@matterlabs/zksync-contracts/-/zksync-contracts-0.1.0.tgz#1ddb7c9002003a5630bcff0464716a1e81423ea9"
+  integrity sha512-BP36eWERxMQRMzBCxHhNu+ENk0S09BGcal+6jN6mc2wd/ejddP81+qXjcjAt8tUHtEEad7AKI8SO7vHqS5EwCg==
+
 "@metamask/eth-sig-util@^4.0.0":
   version "4.0.1"
   resolved "https://registry.npmmirror.com/@metamask/eth-sig-util/-/eth-sig-util-4.0.1.tgz#3ad61f6ea9ad73ba5b19db780d40d9aae5157088"
