@@ -34,22 +34,7 @@ describe("Governance", function () {
     await transferTx.wait();
     expect(await governanceToken.balanceOf(governance.address)).to.equal(1000);
 
-    const voters = runtime.wallets;
-    for (let i = 1; i < voters.length; i++) {
-      const voterWallet = voters[i].ethWallet();
-      const avgVotePower = tokenSupply / (voters.length + 1); // TODO: FIX ME
-      const transferTx = await governanceToken.transfer(voterWallet.address, avgVotePower);
-      await transferTx.wait();
-      expect(await governanceToken.balanceOf(voterWallet.address)).to.equal(avgVotePower);
-      logger.info(`transfer [${avgVotePower}] token to ${voterWallet.address} successful`);
-
-      // should self delegate to obtain voting power
-      const delegateTx = await governanceToken.connect(voterWallet).delegate(voterWallet.address);
-      await delegateTx.wait();
-
-      const votePower = await governanceToken.getVotes(voterWallet.address);
-      logger.info(`voter ${voterWallet.address} votes power is ${votePower}`);
-    }
+    await runtime.initVotePower(tokenSupply);
   }
 
   before(init);
