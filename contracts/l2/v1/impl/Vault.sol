@@ -7,9 +7,14 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { Types } from "../lib/Types.sol";
 import { Base } from "./Base.sol";
+import { Storage } from "./Storage.sol";
 import { IVault } from "../interface/IVault.sol";
 
-abstract contract Vault is IVault, Base {
+abstract contract Vault is IVault, Storage, Base {
+    function tokenAddress(uint32 token) external view returns (address) {
+        return _token[token];
+    }
+
     function balanceOf(address account, uint32 token) external view override returns (int256) {
         return _balance[account][token];
     }

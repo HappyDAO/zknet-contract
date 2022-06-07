@@ -282,6 +282,28 @@ function settlement(ITrade.Order partA, ITrade.Order partB, ITrade.SettlementInf
 | partB | ITrade.Order | undefined |
 | settlementInfo | ITrade.SettlementInfo | undefined |
 
+### tokenAddress
+
+```solidity
+function tokenAddress(uint32 token) external view returns (address)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | uint32 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### transfer
 
 ```solidity

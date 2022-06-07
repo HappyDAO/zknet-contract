@@ -197,6 +197,28 @@ function registerToken(address token, uint32 tokenId) external nonpayable
 | token | address | undefined |
 | tokenId | uint32 | undefined |
 
+### tokenAddress
+
+```solidity
+function tokenAddress(uint32 token) external view returns (address)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | uint32 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### transfer
 
 ```solidity
