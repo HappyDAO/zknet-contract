@@ -82,7 +82,7 @@ const config: HardhatUserConfig = {
     runOnCompile: false,
     clear: true,
     flat: true,
-    only: [":Perpetual$", ":Governance$"],
+    only: [":Perpetual$", ":Governance$", ":IERC20$"],
     spacing: 2,
     pretty: true,
   },

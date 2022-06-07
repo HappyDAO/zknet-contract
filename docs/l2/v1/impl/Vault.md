@@ -180,6 +180,28 @@ function positionWithdraw(uint64 positionId, uint32 token, uint256 amount) exter
 | token | uint32 | undefined |
 | amount | uint256 | undefined |
 
+### tokenAddress
+
+```solidity
+function tokenAddress(uint32 token) external view returns (address)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | uint32 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### transfer
 
 ```solidity
