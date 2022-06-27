@@ -31,7 +31,7 @@ switch (process.env.COMPILE_TARGET) {
 }
 
 const config: HardhatUserConfig = {
-  defaultNetwork: defaultNetwork,
+  defaultNetwork: "hardhat",
   zksolc: {
     version: "0.1.0",
     compilerSource: "docker",
@@ -61,6 +61,7 @@ const config: HardhatUserConfig = {
     sources: contractSource,
   },
   networks: {
+    hardhat: {},
     l1: {
       zksync: false,
       url: process.env.ETH_NETWORK,

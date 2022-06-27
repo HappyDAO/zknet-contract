@@ -16,6 +16,8 @@ interface ITrade {
         uint64 positionId;
         uint32 positionToken;
         int256 positionAmount;
+        uint256 limitPrice;
+        uint256 triggerPrice;
         uint256 fee;
         string extend;
         uint32 timestamp;
@@ -31,19 +33,21 @@ interface ITrade {
     struct SignedPrice {
         string pk;
         uint256 price;
-        uint64 timestamp;
+        uint32 timestamp;
         string signature;
     }
 
     struct OraclePrice {
         uint32 token;
         uint256 price;
+        uint32 timestamp;
         SignedPrice[] signedPrices;
     }
 
-    struct Indice {
+    struct Index {
         uint32 token;
-        uint256 proce;
+        uint256 price;
+        uint32 timestamp;
     }
 
     struct DeleverageOrder {
@@ -71,7 +75,7 @@ interface ITrade {
 
     function oraclePricesTick(OraclePrice[] calldata oraclePrices) external;
 
-    function fundingTick(Indice[] calldata indices) external;
+    function fundingTick(Index[] calldata indexes) external;
 
     function liquidate(
         uint64 liquidatedPositionId,

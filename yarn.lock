@@ -979,6 +979,13 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@nomicfoundation/hardhat-network-helpers@^1.0.0-beta.4":
+  version "1.0.0-beta.4"
+  resolved "https://registry.npmmirror.com/@nomicfoundation/hardhat-network-helpers/-/hardhat-network-helpers-1.0.0-beta.4.tgz#d94319f45985927d8c951a3213c63d66ebc6ea9a"
+  integrity sha512-K2SuMitqgPya3abrv1d/ST3pYBJIm0mSb49mKd7mpEwDLG3rlWwrErTnaDPBTiIazUEZDApglOrWLeKxAgzsyQ==
+  dependencies:
+    ethereumjs-util "^7.1.4"
+
 "@nomiclabs/hardhat-docker@^2.0.0":
   version "2.0.2"
   resolved "https://registry.npmmirror.com/@nomiclabs/hardhat-docker/-/hardhat-docker-2.0.2.tgz#ae964be17951275a55859ff7358e9e7c77448846"

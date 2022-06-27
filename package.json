@@ -33,6 +33,7 @@
   "devDependencies": {
     "@matterlabs/hardhat-zksync-deploy": "^0.2",
     "@matterlabs/hardhat-zksync-solc": "0.3",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0-beta.4",
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@nomiclabs/hardhat-etherscan": "^3.0.3",
     "@nomiclabs/hardhat-solhint": "^2.0.1",

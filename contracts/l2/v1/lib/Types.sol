@@ -11,6 +11,9 @@ library Types {
         uint32 marginToken;
         int256 positionAmount;
         uint32 positionToken;
+        uint256 openPrice;
+        uint32 openTimestamp;
+        Index cacheIndex;
     }
 
     struct Order {
@@ -23,5 +26,15 @@ library Types {
         uint256 fee;
         uint32 timestamp;
         bytes signature;
+    }
+
+    struct Index {
+        uint32 timestamp;
+        uint256 price;
+    }
+
+    struct OraclePrice {
+        uint32 timestamp;
+        uint256 price;
     }
 }

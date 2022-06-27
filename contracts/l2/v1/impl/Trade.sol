@@ -2,17 +2,24 @@
 
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
+
 import { ITrade } from "../interface/ITrade.sol";
 import { Base } from "./Base.sol";
 import { Types } from "../lib/Types.sol";
 import { ChainId } from "../lib/ChainId.sol";
+import { Storage } from "./Storage.sol";
 
-abstract contract Trade is ITrade, Base {
+abstract contract Trade is ITrade, Storage, Base {
+    using SafeMath for uint256;
+
     struct SettlementInfoExtend {
         int256 partAActualAmount;
         int256 partBActualAmount;
         uint256 partAFee;
         uint256 partBFee;
+        uint256 price;
     }
 
     function _verifyOrder(Order calldata order) internal view {
@@ -34,8 +41,9 @@ abstract contract Trade is ITrade, Base {
                         order.positionId,
                         order.positionToken,
                         order.positionAmount,
+                        order.limitPrice,
+                        order.triggerPrice,
                         order.fee,
-                        keccak256(bytes(order.extend)),
                         order.timestamp
                     )
                 )
@@ -121,6 +129,36 @@ abstract contract Trade is ITrade, Base {
         }
     }
 
+    function _calOpenPrice(
+        uint256 price,
+        int256 settlementAmount,
+        Types.Position memory position
+    ) internal pure returns (uint256) {
+        if (settlementAmount + position.positionAmount == 0) {
+            return 0;
+        }
+        int256 totalValue = (int256(position.openPrice) * position.positionAmount) + (settlementAmount * int256(price));
+        return int256Abs(totalValue / (settlementAmount + position.positionAmount));
+    }
+
+    function _calProfit(
+        uint256 price,
+        int256 settlementAmount,
+        Types.Position memory position
+    ) internal pure returns (int256) {
+        if (position.positionAmount == 0) {
+            return 0;
+        }
+        int256 detail = 0;
+        if (
+            (position.positionAmount > 0 && settlementAmount < 0) ||
+            (position.positionAmount < 0 && settlementAmount > 0)
+        ) {
+            detail = int256(position.openPrice) - int256(price);
+        }
+        return detail * settlementAmount;
+    }
+
     function _settlement(
         SettlementInfoExtend memory settlementInfo,
         Types.Position memory positionA,
@@ -128,6 +166,12 @@ abstract contract Trade is ITrade, Base {
         Types.Position memory positionB,
         Types.Order memory existedOrderB
     ) internal {
+        positionA.marginAmount += _calProfit(settlementInfo.price, settlementInfo.partAActualAmount, positionA);
+        positionB.marginAmount += _calProfit(settlementInfo.price, settlementInfo.partBActualAmount, positionB);
+
+        positionA.openPrice = _calOpenPrice(settlementInfo.price, settlementInfo.partAActualAmount, positionA);
+        positionB.openPrice = _calOpenPrice(settlementInfo.price, settlementInfo.partBActualAmount, positionB);
+
         // TODO: process fee
         existedOrderA.remainAmount -= settlementInfo.partAActualAmount;
         existedOrderB.remainAmount -= settlementInfo.partBActualAmount;
@@ -149,16 +193,23 @@ abstract contract Trade is ITrade, Base {
         int256 partBActualAmount = int256(settlementInfo.positionSold);
         if (partA.positionAmount < 0) {
             partAActualAmount = -partAActualAmount;
-        }
-        if (partB.positionAmount < 0) {
+        } else {
             partBActualAmount = -partBActualAmount;
+        }
+
+        uint256 price = 0;
+        if (partA.limitPrice < partB.limitPrice) {
+            price = partA.limitPrice;
+        } else {
+            price = partB.limitPrice;
         }
 
         SettlementInfoExtend memory settlementInfoExtend = SettlementInfoExtend(
             partAActualAmount,
             partBActualAmount,
             settlementInfo.partAFee,
-            settlementInfo.partBFee
+            settlementInfo.partBFee,
+            price
         );
 
         Types.Order memory existedOrderA = _order[partA.id];
@@ -171,18 +222,109 @@ abstract contract Trade is ITrade, Base {
         Types.Position memory positionB = _getAndCheckPosition(partB.positionId, partB.trader);
         _checkPositionMatch(existedOrderB, partB, positionB);
 
+        _settlePosition(positionA);
+        _settlePosition(positionB);
         _settlement(settlementInfoExtend, positionA, existedOrderA, positionB, existedOrderB);
+
+        _checkPosition(positionA);
+        _checkPosition(positionB);
     }
 
-    function oraclePricesTick(OraclePrice[] calldata oraclePrices) external override onlyManager {}
+    function oraclePricesTick(OraclePrice[] calldata oraclePrices) external override onlyManager {
+        uint256 num = oraclePrices.length;
+        for (uint256 i = 0; i < num; i++) {
+            OraclePrice memory oraclePrice = oraclePrices[i];
+            _global_oracle_price[oraclePrice.token] = Types.OraclePrice({
+                timestamp: oraclePrice.timestamp,
+                price: oraclePrice.price
+            });
+        }
+    }
 
-    function fundingTick(Indice[] calldata indices) external override onlyManager {}
+    function fundingTick(Index[] calldata indexes) external override onlyManager {
+        uint256 num = indexes.length;
+        for (uint256 i = 0; i < num; i++) {
+            Index memory index = indexes[i];
+            _global_index[index.token] = Types.Index({ timestamp: index.timestamp, price: index.price });
+        }
+    }
 
     function liquidate(
         uint64 liquidatedPositionId,
         Order calldata liquidatorOrder,
         SettlementInfo calldata settlementInfo
-    ) external override onlyManager {}
+    ) external override onlyManager {
+        Types.Position memory positionA = _position[liquidatedPositionId];
+        require(positionA.id != 0, "Trade: position not exist");
+        require(settlementInfo.positionSold <= int256Abs(positionA.positionAmount), "Trade: settlement too much");
+
+        int256 partAActualAmount = int256(settlementInfo.positionSold);
+        int256 partBActualAmount = int256(settlementInfo.positionSold);
+        if (liquidatorOrder.positionAmount < 0) {
+            if (positionA.positionAmount > 0) {
+                revert("Trade: order side not match");
+            }
+            partBActualAmount = -partBActualAmount;
+        } else {
+            if (positionA.positionAmount < 0) {
+                revert("Trade: order side not match");
+            }
+            partAActualAmount = -partAActualAmount;
+        }
+
+        uint256 price = liquidatorOrder.limitPrice;
+        SettlementInfoExtend memory settlementInfoExtend = SettlementInfoExtend(
+            partAActualAmount,
+            partBActualAmount,
+            settlementInfo.partAFee,
+            settlementInfo.partBFee,
+            price
+        );
+
+        Types.Order memory existedOrderB = _order[liquidatorOrder.id];
+        Types.Position memory positionB = _getAndCheckPosition(liquidatorOrder.positionId, liquidatorOrder.trader);
+        _checkPositionMatch(existedOrderB, liquidatorOrder, positionB);
+
+        _settlePosition(positionA);
+        _settlePosition(positionB);
+
+        positionA.marginAmount += _calProfit(
+            settlementInfoExtend.price,
+            settlementInfoExtend.partAActualAmount,
+            positionA
+        );
+        positionB.marginAmount += _calProfit(
+            settlementInfoExtend.price,
+            settlementInfoExtend.partBActualAmount,
+            positionB
+        );
+
+        positionA.openPrice = _calOpenPrice(
+            settlementInfoExtend.price,
+            settlementInfoExtend.partAActualAmount,
+            positionA
+        );
+        positionB.openPrice = _calOpenPrice(
+            settlementInfoExtend.price,
+            settlementInfoExtend.partBActualAmount,
+            positionB
+        );
+
+        // TODO: process fee
+        existedOrderB.remainAmount -= settlementInfoExtend.partBActualAmount;
+        positionA.positionAmount += settlementInfoExtend.partAActualAmount;
+        positionB.positionAmount += settlementInfoExtend.partBActualAmount;
+
+        _order[existedOrderB.id] = existedOrderB;
+        _position[positionA.id] = positionA;
+        _position[positionB.id] = positionB;
+
+        printPosition(positionA.id);
+        printPosition(positionB.id);
+
+        _checkPosition(positionA);
+        _checkPosition(positionB);
+    }
 
     function deleverage(DeleverageOrder calldata deleveragedOrder, DeleverageOrder calldata deleveragerOrder)
         external
