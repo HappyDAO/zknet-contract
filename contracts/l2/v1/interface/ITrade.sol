@@ -58,14 +58,10 @@ interface ITrade {
 
     /// @notice Emitted when order settlement, including open-position and close-position(active or passive).
     /// @param positionId      Position id
+    /// @param typ             change reason: 0-funding, 1-inc position, 1-dec position, 2-liquidate, 2-deleverage
     /// @param marginAmount    Margin remain amount
     /// @param positionAmount  Position remain amount
-    event LogPositionChange(uint64 indexed positionId, uint256 marginAmount, uint256 positionAmount);
-
-    /// @notice Emitted when funding fee for a position is incurred.
-    /// @param positiontoken Position token id
-    /// @param fundingRate   Calculated funding rate
-    event LogFundingTick(uint32 positiontoken, int256 fundingRate);
+    event LogPositionChange(uint64 indexed positionId, uint8 typ, uint256 marginAmount, uint256 positionAmount);
 
     function settlement(
         Order calldata partA,

@@ -31,7 +31,6 @@ abstract contract Vault is IVault, Storage, Base {
         return _position[positionId].positionAmount;
     }
 
-
     function bind(SignedAccount calldata l1Account) external override {}
 
     function devDeposit(uint32 token, uint256 amount) external {
@@ -42,6 +41,7 @@ abstract contract Vault is IVault, Storage, Base {
         address tokenAddr = _tokenAddress(token);
         SafeERC20.safeTransferFrom(IERC20(tokenAddr), _msgSender(), _contractAddress(), amount);
         _balance[_msgSender()][token] += int256(amount);
+        emit LogDeposit(token, _msgSender(), amount);
     }
 
     function withdraw(uint32 token, uint256 amount) external override nonReentrant {
@@ -49,6 +49,7 @@ abstract contract Vault is IVault, Storage, Base {
         require(_balance[_msgSender()][token] >= int256(amount), "Vault: insufficient balance");
         _balance[_msgSender()][token] -= int256(amount);
         SafeERC20.safeTransfer(IERC20(tokenAddr), _msgSender(), amount);
+        emit LogWithdrawn(token, _msgSender(), amount);
     }
 
     function positionDeposit(
@@ -76,6 +77,8 @@ abstract contract Vault is IVault, Storage, Base {
 
         _position[positionId] = position;
         _balance[_msgSender()][token] -= int256(amount);
+
+        emit LogPositionDeposit(positionId, token, _msgSender(), amount);
     }
 
     function positionWithdraw(
@@ -94,6 +97,8 @@ abstract contract Vault is IVault, Storage, Base {
         _balance[_msgSender()][token] += int256(amount);
 
         _checkPosition(position);
+
+        emit LogPositionWithdrawn(positionId, token, _msgSender(), amount);
     }
 
     function transfer(
@@ -108,5 +113,7 @@ abstract contract Vault is IVault, Storage, Base {
 
         _balance[_msgSender()][token] -= int256(amount);
         _balance[to][token] += int256(amount);
+
+        emit LogTransfer(_msgSender(), to, token, amount);
     }
 }
