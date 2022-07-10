@@ -3,7 +3,6 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "hardhat/console.sol";
 
 import { ITrade } from "../interface/ITrade.sol";
 import { Base } from "./Base.sol";
@@ -257,6 +256,7 @@ abstract contract Trade is ITrade, Storage, Base {
         Types.Position memory positionA = _position[liquidatedPositionId];
         require(positionA.id != 0, "Trade: position not exist");
         require(settlementInfo.positionSold <= int256Abs(positionA.positionAmount), "Trade: settlement too much");
+        require(_checkPositionIsZero(positionA), "Trade: position can not be liquidated");
 
         int256 partAActualAmount = int256(settlementInfo.positionSold);
         int256 partBActualAmount = int256(settlementInfo.positionSold);

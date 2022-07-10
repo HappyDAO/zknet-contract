@@ -56,6 +56,13 @@ describe("DEVPerpetual", function () {
     return order;
   }
 
+  async function deployPerpetual() {
+    const f = await hre.ethers.getContractFactory("Perpetual");
+    const c = await f.deploy(eip712DomainName, eip712DomainVersion);
+    await c.deployed();
+    perpetual = c as Perpetual;
+  }
+
   async function printPositionInfo(positionId1: number, positionId2: number) {
     await perpetual.connect(randWallet1).printPosition(positionId1);
     await perpetual.connect(randWallet2).printPosition(positionId2);
@@ -64,15 +71,13 @@ describe("DEVPerpetual", function () {
   async function init() {
     logger.info("Init Perpetual");
     [adminWallet, randWallet1, randWallet2] = await hre.ethers.getSigners();
-    const f = await hre.ethers.getContractFactory("Perpetual");
-    const c = await f.deploy(eip712DomainName, eip712DomainVersion);
-    await c.deployed();
-    perpetual = c as Perpetual;
   }
 
   beforeEach(init);
 
   it("test trade", async function () {
+    await deployPerpetual();
+
     logger.info("Prepare test wallets");
     const initBalanceAmount = 10000000000;
     const initMarginAmount = 10000;
@@ -95,23 +100,27 @@ describe("DEVPerpetual", function () {
     expect(await perpetual.connect(randWallet2).positionMarginBalanceOf(positionId2)).to.equal(initMarginAmount);
 
     logger.info("FundingTick1");
-    perpetual.connect(adminWallet).fundingTick([
-      {
-        token: ETH_ID,
-        price: positionPrice,
-        timestamp: Math.floor(Date.now() / 1000),
-      },
-    ]);
+    await (
+      await perpetual.connect(adminWallet).fundingTick([
+        {
+          token: ETH_ID,
+          price: positionPrice,
+          timestamp: Math.floor(Date.now() / 1000),
+        },
+      ])
+    ).wait();
 
     logger.info("OraclePricesTick1");
-    perpetual.connect(adminWallet).oraclePricesTick([
-      {
-        token: ETH_ID,
-        price: positionPrice,
-        timestamp: Math.floor(Date.now() / 1000),
-        signedPrices: [],
-      },
-    ]);
+    await (
+      await perpetual.connect(adminWallet).oraclePricesTick([
+        {
+          token: ETH_ID,
+          price: positionPrice,
+          timestamp: Math.floor(Date.now() / 1000),
+          signedPrices: [],
+        },
+      ])
+    ).wait();
 
     logger.info("Open Position");
     await (
@@ -317,5 +326,351 @@ describe("DEVPerpetual", function () {
     await perpetual.connect(randWallet1).devSettlePosition(positionId1);
     await perpetual.connect(randWallet2).devSettlePosition(positionId2);
     await printPositionInfo(positionId1, positionId2);
+  });
+
+  it("test trade error cases", async function () {
+    await deployPerpetual();
+
+    logger.info("Prepare test wallets");
+    const initBalanceAmount = 10000000000;
+    const initMarginAmount = 10000;
+    const positionAmount = 10;
+    const positionPrice = "100";
+
+    await (await perpetual.connect(randWallet1).devDeposit(USDT_ID, initBalanceAmount)).wait();
+    await (await perpetual.connect(randWallet2).devDeposit(USDT_ID, initBalanceAmount)).wait();
+    expect(await perpetual.connect(randWallet1).balanceOf(randWallet1.address, USDT_ID)).to.equal(initBalanceAmount);
+    expect(await perpetual.connect(randWallet2).balanceOf(randWallet2.address, USDT_ID)).to.equal(initBalanceAmount);
+
+    logger.info("Error Deposit to position");
+    const positionId1 = 1;
+    const positionId2 = 2;
+
+    await expect(perpetual.connect(randWallet1).positionDeposit(positionId1, 333, initMarginAmount)).to.be.revertedWith(
+      "Vault: position margin token only support USDT[token-id:1]",
+    );
+
+    await expect(
+      perpetual.connect(randWallet1).positionDeposit(positionId1, USDT_ID, initBalanceAmount * 2),
+    ).to.be.revertedWith("Vault: insufficient balance");
+
+    let orderId1 = 1;
+    let orderId2 = 2;
+
+    logger.info("Error admin");
+    await expect(
+      perpetual.connect(randWallet1).fundingTick([
+        {
+          token: ETH_ID,
+          price: positionPrice,
+          timestamp: Math.floor(Date.now() / 1000),
+        },
+      ]),
+    ).to.be.revertedWith("AccessControl: caller is not the manager");
+
+    await expect(
+      perpetual.connect(randWallet2).oraclePricesTick([
+        {
+          token: ETH_ID,
+          price: positionPrice,
+          timestamp: Math.floor(Date.now() / 1000),
+          signedPrices: [],
+        },
+      ]),
+    ).to.be.revertedWith("AccessControl: caller is not the manager");
+
+    logger.info("Error signature");
+    const order1 = await devSignOrder(randWallet1, {
+      id: orderId1,
+      typ: "LIMIT",
+      trader: "",
+      positionId: positionId1,
+      positionToken: ETH_ID,
+      positionAmount: positionAmount,
+      limitPrice: positionPrice,
+      triggerPrice: "101",
+      fee: 1,
+      extend: "{}",
+      timestamp: Math.floor(Date.now() / 1000),
+      signature: "",
+    });
+    order1.signature = "error signature";
+    await expect(
+      perpetual.connect(adminWallet).settlement(
+        order1,
+        await devSignOrder(randWallet2, {
+          id: orderId2,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId2,
+          positionToken: ETH_ID,
+          positionAmount: -positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        {
+          positionSold: 10,
+          partAFee: 1,
+          partBFee: 1,
+        },
+      ),
+    ).to.be.reverted;
+
+    logger.info("Error Open Position");
+    await (await perpetual.connect(randWallet1).positionDeposit(positionId1, USDT_ID, initMarginAmount)).wait();
+    await (await perpetual.connect(randWallet2).positionDeposit(positionId2, USDT_ID, initMarginAmount)).wait();
+    await expect(
+      perpetual.connect(adminWallet).settlement(
+        await devSignOrder(randWallet1, {
+          id: orderId1,
+          typ: "LIMIT",
+          trader: "",
+          positionId: 12323,
+          positionToken: ETH_ID,
+          positionAmount: positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        await devSignOrder(randWallet2, {
+          id: orderId2,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId2,
+          positionToken: ETH_ID,
+          positionAmount: -positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        {
+          positionSold: 10,
+          partAFee: 1,
+          partBFee: 1,
+        },
+      ),
+    ).to.be.reverted;
+
+    await expect(
+      perpetual.connect(adminWallet).settlement(
+        await devSignOrder(randWallet1, {
+          id: orderId1,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId1,
+          positionToken: ETH_ID,
+          positionAmount: positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        await devSignOrder(randWallet2, {
+          id: orderId2,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId2,
+          positionToken: ETH_ID,
+          positionAmount: positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        {
+          positionSold: 10,
+          partAFee: 1,
+          partBFee: 1,
+        },
+      ),
+    ).to.be.reverted;
+
+    await expect(
+      perpetual.connect(adminWallet).settlement(
+        await devSignOrder(randWallet1, {
+          id: orderId1,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId1,
+          positionToken: ETH_ID,
+          positionAmount: positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        await devSignOrder(randWallet2, {
+          id: orderId2,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId2,
+          positionToken: ETH_ID,
+          positionAmount: -positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        {
+          positionSold: positionAmount * 2,
+          partAFee: 1,
+          partBFee: 1,
+        },
+      ),
+    ).to.be.reverted;
+
+    await (
+      await perpetual.connect(adminWallet).fundingTick([
+        {
+          token: ETH_ID,
+          price: positionPrice,
+          timestamp: Math.floor(Date.now() / 1000),
+        },
+      ])
+    ).wait();
+
+    await (
+      await perpetual.connect(adminWallet).oraclePricesTick([
+        {
+          token: ETH_ID,
+          price: positionPrice,
+          timestamp: Math.floor(Date.now() / 1000),
+          signedPrices: [],
+        },
+      ])
+    ).wait();
+
+    await (
+      await perpetual.connect(adminWallet).settlement(
+        await devSignOrder(randWallet1, {
+          id: orderId1,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId1,
+          positionToken: ETH_ID,
+          positionAmount: positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        await devSignOrder(randWallet2, {
+          id: orderId2,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId2,
+          positionToken: ETH_ID,
+          positionAmount: -positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        {
+          positionSold: 10,
+          partAFee: 1,
+          partBFee: 1,
+        },
+      )
+    ).wait();
+
+    await expect(
+      perpetual.connect(adminWallet).settlement(
+        await devSignOrder(randWallet1, {
+          id: orderId1,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId1,
+          positionToken: ETH_ID,
+          positionAmount: positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        await devSignOrder(randWallet2, {
+          id: orderId2,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId2,
+          positionToken: ETH_ID,
+          positionAmount: -positionAmount,
+          limitPrice: positionPrice,
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        {
+          positionSold: 10,
+          partAFee: 1,
+          partBFee: 1,
+        },
+      ),
+    ).to.be.reverted;
+
+    logger.info("Error Liquidate");
+    await (
+      await perpetual.connect(adminWallet).oraclePricesTick([
+        {
+          token: ETH_ID,
+          price: "80",
+          timestamp: Math.floor(Date.now() / 1000),
+          signedPrices: [],
+        },
+      ])
+    ).wait();
+
+    orderId1 = orderId1 + 2;
+    orderId2 = orderId2 + 2;
+    await expect(
+      perpetual.connect(adminWallet).liquidate(
+        positionId2,
+        await devSignOrder(randWallet1, {
+          id: orderId1,
+          typ: "LIMIT",
+          trader: "",
+          positionId: positionId1,
+          positionToken: ETH_ID,
+          positionAmount: -positionAmount,
+          limitPrice: "1096",
+          triggerPrice: "101",
+          fee: 1,
+          extend: "{}",
+          timestamp: Math.floor(Date.now() / 1000),
+          signature: "",
+        }),
+        {
+          positionSold: 5,
+          partAFee: 1,
+          partBFee: 1,
+        },
+      ),
+    ).to.be.revertedWith("Trade: position can not be liquidated");
   });
 });

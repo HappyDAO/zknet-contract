@@ -5,7 +5,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 import { Types } from "../lib/Types.sol";
 import { Storage } from "./Storage.sol";
@@ -24,14 +24,14 @@ abstract contract Base is Storage, AccessControl, ReentrancyGuard {
     function printPosition(uint64 positionId) public view {
         Types.Position memory position = _position[positionId];
         require(position.id != 0, "Trade: position not exist");
-        console.log("position id: ", position.id);
-        console.log("marginAmount: ");
-        console.logInt(position.marginAmount);
-        console.log("positionAmount: ");
-        console.logInt(position.positionAmount);
-        console.log("openPrice: ", position.openPrice);
-        console.log("cacheIndex.price: ", position.cacheIndex.price);
-        console.log("");
+        // console.log("position id: ", position.id);
+        // console.log("marginAmount: ");
+        // console.logInt(position.marginAmount);
+        // console.log("positionAmount: ");
+        // console.logInt(position.positionAmount);
+        // console.log("openPrice: ", position.openPrice);
+        // console.log("cacheIndex.price: ", position.cacheIndex.price);
+        // console.log("");
     }
 
     function _contractAddress() internal view returns (address) {
@@ -132,6 +132,41 @@ abstract contract Base is Storage, AccessControl, ReentrancyGuard {
         uint256 marginAmount = uint256(position.marginAmount);
         uint256 positionAmount = int256Abs(position.positionAmount);
         if (detail.mul(positionAmount) > marginAmount) {
+            return true;
+        }
+        return false;
+    }
+
+    function _checkPositionIsZero(Types.Position memory position) internal view returns (bool) {
+        if (position.positionAmount == 0) {
+            return false;
+        }
+
+        if (position.marginAmount < 0) {
+            return true;
+        }
+
+        uint256 currentPrice = _global_oracle_price[position.positionToken].price;
+
+        if (currentPrice == position.openPrice) {
+            return false;
+        }
+        uint256 detail;
+        if (currentPrice > position.openPrice) {
+            if (position.positionAmount > 0) {
+                return false;
+            }
+            detail = currentPrice.sub(position.openPrice);
+        } else {
+            if (position.positionAmount < 0) {
+                return false;
+            }
+            detail = position.openPrice.sub(currentPrice);
+        }
+
+        uint256 marginAmount = uint256(position.marginAmount);
+        uint256 positionAmount = int256Abs(position.positionAmount);
+        if (detail.mul(positionAmount) == marginAmount) {
             return true;
         }
         return false;

@@ -28,11 +28,12 @@
     "precommit": "yarn compile && yarn export-abi && yarn export-doc && yarn prettier && yarn lint",
     "test": "yarn hardhat test",
     "deploy:l1": "yarn hardhat run scripts/deploy-governance.ts",
-    "deploy:l2": "yarn hardhat run scripts/deploy-perpetual.ts"
+    "deploy:l2": "yarn hardhat run scripts/deploy-perpetual.ts",
+    "test-coverage": "yarn hardhat coverage --testfiles test/dev/*.ts"
   },
   "devDependencies": {
-    "@matterlabs/hardhat-zksync-deploy": "^0.2",
-    "@matterlabs/hardhat-zksync-solc": "0.3",
+    "@matterlabs/hardhat-zksync-deploy": "0.3.5",
+    "@matterlabs/hardhat-zksync-solc": "0.3.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0-beta.4",
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@nomiclabs/hardhat-etherscan": "^3.0.3",
@@ -69,6 +70,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.7",
     "solhint-plugin-prettier": "^0.0.5",
+    "solidity-coverage": "^0.7.21",
     "ts-node": "^10.8.0",
     "typechain": "^8.0.0",
     "typescript": "^4.6.4",
