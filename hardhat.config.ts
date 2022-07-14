@@ -11,6 +11,7 @@ import "hardhat-abi-exporter";
 import "hardhat-gas-reporter";
 import { HardhatUserConfig } from "hardhat/config";
 import { resolve } from "path";
+import "solidity-coverage";
 
 const zknetEnv = process.env.ZKNET_ENV == undefined ? "local" : process.env.ZKNET_ENV;
 
@@ -30,8 +31,10 @@ switch (process.env.COMPILE_TARGET) {
     break;
 }
 
+
+
 const config: HardhatUserConfig = {
-  defaultNetwork: defaultNetwork,
+  defaultNetwork: "hardhat",
   zksolc: {
     version: "0.1.0",
     compilerSource: "docker",
@@ -42,6 +45,7 @@ const config: HardhatUserConfig = {
       },
       experimental: {
         dockerImage: "matterlabs/zksolc",
+        tag: "v1.1.0",
       },
     },
   },
@@ -61,6 +65,7 @@ const config: HardhatUserConfig = {
     sources: contractSource,
   },
   networks: {
+    hardhat: {},
     l1: {
       zksync: false,
       url: process.env.ETH_NETWORK,

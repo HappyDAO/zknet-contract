@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import * as zksync from "zksync-web3";
 
 import { ITrade, Perpetual } from "../typechain-l2";
@@ -33,6 +34,14 @@ export class PerpetualRuntime extends BaseRuntime {
     return (await this.deployL2Contract("Perpetual", [this.eip712DomainName, this.eip712DomainVersion])) as Perpetual;
   }
 
+  public async devDeployPerpetual(deployWallet?: ethers.Wallet): Promise<Perpetual> {
+    return (await this.deployL1Contract(
+      "Perpetual",
+      [this.eip712DomainName, this.eip712DomainVersion],
+      deployWallet,
+    )) as Perpetual;
+  }
+
   public async prepareL2Wallet(ethAmount: string, erc20Amount?: string, l1PrivateKey?: string): Promise<zksync.Wallet> {
     const randWallet = await super.prepareL2Wallet(ethAmount, l1PrivateKey);
 
@@ -53,6 +62,34 @@ export class PerpetualRuntime extends BaseRuntime {
 
   public async signOrder(
     wallet: zksync.Wallet,
+    contractAddress: string,
+    order: ITrade.OrderStruct,
+  ): Promise<ITrade.OrderStruct> {
+    const domain = {
+      name: this.eip712DomainName,
+      version: this.eip712DomainVersion,
+      chainId: this.eip712ChainId,
+      verifyingContract: contractAddress,
+    };
+
+    order.trader = wallet.address;
+    const message = {
+      id: order.id,
+      typ: order.typ,
+      trader: order.trader,
+      positionId: order.positionId,
+      positionToken: order.positionToken,
+      positionAmount: order.positionAmount,
+      fee: order.fee,
+      extend: order.extend,
+      timestamp: order.timestamp,
+    };
+    order.signature = await wallet._signTypedData(domain, orderTypes, message);
+    return order;
+  }
+
+  public async devSignOrder(
+    wallet: ethers.Wallet,
     contractAddress: string,
     order: ITrade.OrderStruct,
   ): Promise<ITrade.OrderStruct> {

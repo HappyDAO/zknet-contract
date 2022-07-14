@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { ethers } from "hardhat";
 import * as zksync from "zksync-web3";
 
 import { IERC20, Perpetual } from "../../typechain-l2";
@@ -19,9 +20,9 @@ describe("Perpetual", function () {
   async function init() {
     logger.info("Init Perpetual");
     runtime = new PerpetualRuntime();
-    erc20L2 = new zksync.Contract(ERC20_ADDRESS, erc20ABI, runtime.providerL2) as IERC20;
-    ethL2 = new zksync.Contract(ETH_ADDRESS, erc20ABI, runtime.providerL2) as IERC20;
-    perpetual = await runtime.deployPerpetual();
+    erc20L2 = new ethers.Contract(ERC20_ADDRESS, erc20ABI, runtime.providerL1) as IERC20;
+    ethL2 = new ethers.Contract(ETH_ADDRESS, erc20ABI, runtime.providerL1) as IERC20;
+    perpetual = await runtime.devDeployPerpetual();
 
     await (await perpetual.registerToken(ETH_ADDRESS, ETH_ID)).wait();
     await (await perpetual.registerToken(ERC20_ADDRESS, ERC20_ID)).wait();
@@ -77,6 +78,8 @@ describe("Perpetual", function () {
           extend: "{}",
           timestamp: Math.floor(Date.now() / 1000),
           signature: "",
+          limitPrice: "",
+          triggerPrice: ""
         }),
         await runtime.signOrder(randWallet2, perpetual.address, {
           id: orderId2,
@@ -89,6 +92,8 @@ describe("Perpetual", function () {
           extend: "{}",
           timestamp: Math.floor(Date.now() / 1000),
           signature: "",
+          limitPrice: "",
+          triggerPrice: ""
         }),
         {
           positionSold: 100,
